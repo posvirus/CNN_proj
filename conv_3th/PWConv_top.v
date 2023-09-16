@@ -48,6 +48,7 @@ reg signed [BIAS_W-1:0]              pwconv_bias_reg;
 wire signed [OUTPUT_NUM*(DATA_W+FILTER_W+6)-1:0] data_o_temp;
 wire                                             valid_o_temp;
 
+
 always @(posedge clk or negedge rst_n) begin
 	if(!rst_n)
 		cnt <= 5'd0;
