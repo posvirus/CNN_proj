@@ -67,25 +67,25 @@ always @(posedge clk or negedge rst_n) begin
 	else if (pwconv_valid_i)
 	    pwconv_input_reg <= pwconv_pixel_i;
 	else
-	    pwconv_input_reg <= pwconv_pixel_i;
+	    pwconv_input_reg <= pwconv_input_reg;
 end
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n)
 	    pwconv_weight_reg <= {(32*1*1*DATA_W){1'b0}};
-	else if (pwconv_valid_i)
+	else if (pwconv_valid_i | cnt == 5'd17)
 	    pwconv_weight_reg <= pwconv_weight_i;
 	else
-	    pwconv_weight_reg <= pwconv_weight_i;
+	    pwconv_weight_reg <= pwconv_weight_reg;
 end
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n)
 	    pwconv_bias_reg <= {BIAS_W{1'b0}};
-	else if (pwconv_valid_i)
+	else if (pwconv_valid_i | cnt == 5'd17)
 	    pwconv_bias_reg <= pwconv_bias_i;
 	else
-	    pwconv_bias_reg <= pwconv_bias_i;
+	    pwconv_bias_reg <= pwconv_bias_reg;
 end
 
 always @(posedge clk or negedge rst_n) begin
@@ -121,7 +121,7 @@ u_PWConv(
 	.clk(clk),
 	.rst_n(rst_n),
 	
-    .pwconv_calc_en(pwconv_calc_en | pwconv_valid_i),
+    .pwconv_calc_en(pwconv_calc_en),
     .pwconv_pixel_i(pwconv_input_reg),
 	.weight_i(pwconv_weight_reg),
 	.bias_i(pwconv_bias_reg),
