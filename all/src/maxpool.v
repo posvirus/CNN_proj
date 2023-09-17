@@ -95,9 +95,9 @@ always @(posedge clk or negedge rst_n) begin
 		data6 <= 0;
 	else if (maxpool_en) begin
 		if (data3 < data4)
-			data6 <= data3;
-		else
 			data6 <= data4;
+		else
+			data6 <= data3;
 	end
 end
 
@@ -108,7 +108,7 @@ always @(posedge clk or negedge rst_n) begin
 	else if ((cnt>=5'd2) && (cnt<=5'd10)) begin
 		if (data5 < data6)
 			maxpool_output[(cnt-1)*8 -1-:8] <= data6;
-		else if (data5 > data6)
+		else 
 			maxpool_output[(cnt-1)*8 -1-:8] <= data5;
 	end
 end
@@ -118,7 +118,7 @@ always @(posedge clk or negedge rst_n) begin
 		maxpool_valid_o <= 1'b0;
 	else if (maxpool_valid_o)
 		maxpool_valid_o <= 1'b0;
-	else if (cnt == 5'd16)
+	else if (cnt == 5'd12)
 		maxpool_valid_o <= 1'b1;
 end
  

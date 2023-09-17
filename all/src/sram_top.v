@@ -5,6 +5,7 @@ module sram_top(
 	input wire [72-1:0] data_w, 
 	input wire [9:0] addr_w,
 	input wire sta,
+	input wire conv2_valid_i,
 	input wire conv3_valid_i,
 	input wire fc_valid_i,
 	
@@ -14,20 +15,21 @@ module sram_top(
 	output reg [8*9-1:0] weight_fc1,
 	output reg [8*9-1:0] weight_fc2,
 	
-	output reg [16-1:0] bias_1,
+	//output reg [16-1:0] bias_1,
 	output reg [16-1:0] bias_2,
 	output reg [16-1:0] bias_3,
 	output reg [32-1:0] bias_fc
 );
 
-//reg state; // conv1_1st_ctrl:  state machine: 0: init; 1: cycle  
-//reg [8:0] init_cnt; // conv1_1st_ctrl: the initial counter
+reg state; // conv1_1st_ctrl:  state machine: 0: init; 1: cycle  
+reg [8:0] init_cnt; // conv1_1st_ctrl: the initial counter
 reg [4:0] cnt; 
 
 reg [4:0] num_cnt_1; //0-31
 reg [4:0] num_cnt_2; //0-31
 reg [4:0] num_cnt_3; //0-31
 reg [4:0] num_cnt_fc; //0-31
+reg num_cnt_en_2;
 reg num_cnt_en_3;
 reg num_cnt_en_fc;
 
@@ -58,7 +60,7 @@ always @(*) begin
 end
 
 //read
-/*
+
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n)
         init_cnt <= 9'b0;
@@ -73,14 +75,14 @@ always @(posedge clk or negedge rst_n) begin
     else if (init_cnt==301) // initial pixel/weight load complete
         state <= 1'b1; // start cycling
 end
-*/
+
 
 always @(posedge clk or negedge rst_n) begin
 	if(!rst_n)
 		cnt <= 5'd0;
 	else if (cnt == 5'd17)
 		cnt <= 5'd0;
-	else if (sta)
+	else if (state)
 		cnt <= cnt + 1'b1;
 end
 
@@ -89,7 +91,7 @@ end
 always @(posedge clk or negedge rst_n) begin
 	if(!rst_n)
 		num_cnt_1 <= 5'd0;
-	else if (cnt == 5'd17 ) begin
+	else if (cnt == 5'd17 | init_cnt == 5'd17 ) begin
 		if (num_cnt_1 == 5'd31)
 			num_cnt_1 <= 5'd0;
 		else 
@@ -100,8 +102,15 @@ end
 //conv2_num
 always @(posedge clk or negedge rst_n) begin
 	if(!rst_n)
+		num_cnt_en_2 <= 1'b0;
+	else if (conv2_valid_i)
+		num_cnt_en_2 <= 1'b1;
+end
+
+always @(posedge clk or negedge rst_n) begin
+	if(!rst_n)
 		num_cnt_2 <= 5'd0;
-	else if (cnt == 5'd17) begin
+	else if ((cnt == 5'd17) && (num_cnt_en_2)) begin
 		if (num_cnt_2 == 5'd31)
 			num_cnt_2 <= 5'd0;
 		else 
@@ -149,8 +158,24 @@ end
 
 
 //addr_r
+/*
 always @(*) begin
     if ((cnt >= 5'd0)&(cnt <= 5'd8))         //conv1
+		addr_r = cnt + num_cnt_1*9;
+	else if ((cnt >= 5'd9) & (cnt <= 5'd10))      //conv2
+		addr_r = 288 + (cnt - 9) + num_cnt_2*2;
+	else if ((cnt >= 5'd11) & (cnt <= 5'd14))     //conv3
+		addr_r = 352 + (cnt - 11) + num_cnt_3*4;
+	else if ((cnt >= 5'd15) & (cnt <= 5'd16))     //fc_weight
+		addr_r = 480 + (cnt - 15) + num_cnt_fc*2;   
+	else	                                      //fc_bias
+		addr_r = 544;
+end
+*/
+always @(*) begin
+	if ((init_cnt >= 5'd0)&(init_cnt <= 5'd8))    //conv1_init
+		addr_r = init_cnt + num_cnt_1*9;
+	else if ((cnt >= 5'd0)&(cnt <= 5'd8))         //conv1
 		addr_r = cnt + num_cnt_1*9;
 	else if ((cnt >= 5'd9) & (cnt <= 5'd10))      //conv2
 		addr_r = 288 + (cnt - 9) + num_cnt_2*2;
@@ -172,19 +197,20 @@ end
 
 //conv1
 always @(*) begin
-	if ((cnt >= 5'd1) & (cnt <= 5'd9))            
+	if (((cnt >= 5'd1) & (cnt <= 5'd9)) | ((init_cnt >= 5'd1) & (init_cnt <= 5'd9)))        
 		weight_1 = data_r;
 	else 
 		weight_1 = 0;
 end
 
+/*
 always @(*) begin
 	if (cnt == 5'd9)            
 		bias_1 = data_r[55:40];
 	else 
 		bias_1 = 0;
 end
-
+*/
 //conv2
 always @(posedge clk or negedge rst_n) begin
 	if (!rst_n)

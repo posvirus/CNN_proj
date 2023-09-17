@@ -2,9 +2,10 @@ module cnn(
 	input wire clk,
 	input wire rst_n,
 	input wire write_en,
-	input wire [7:0] pixel_i,
+	input wire [39:0] scan_i,   //scan_chain
 	input wire [71:0] data_w,   //scan_chain
 	input wire [9:0] addr_w,    //scan_chain
+	input wire [23:0] bias_i,          //sacn_chain : conv1
 	input wire sta,
 	
 	output wire valid_o,
@@ -32,7 +33,7 @@ wire [8*9-1:0] weight_2;
 wire [8*32-1:0] weight_3;
 wire [8*9-1:0] weight_fc1;
 wire [8*9-1:0] weight_fc2;
-wire [16-1:0] bias_1;
+//wire [16-1:0] bias_1;
 wire [16-1:0] bias_2;
 wire [16-1:0] bias_3;
 wire [32-1:0] bias_fc;
@@ -46,6 +47,7 @@ sram_top u_sram_top(
 	.addr_w(addr_w),
 	
 	.sta(sta),
+	.conv2_valid_i(conv1_valid_o_rescaled),
 	.conv3_valid_i(conv2_valid_o_rescaled),
 	.fc_valid_i(maxpool_valid_o),
 	.weight_1(weight_1),
@@ -54,7 +56,7 @@ sram_top u_sram_top(
 	.weight_fc1(weight_fc1),
 	.weight_fc2(weight_fc2),
 	
-	.bias_1(bias_1),
+	//.bias_1(bias_1),
 	.bias_2(bias_2),
 	.bias_3(bias_3),
 	.bias_fc(bias_fc)	
@@ -65,9 +67,9 @@ conv_1st_top u_conv_1st_top(
 		.clk(clk),
 		.rst_n(rst_n),
 		.sta(sta),
-		.pixel_i(pixel_i),
+		.scan_i(scan_i),
+		.bias_i(bias_i),
 		.weight_i(weight_1),
-		.bias_i(bias_1),
 		
 		.conv_o(conv1_ofmap_rescaled),
 		.valid_o(conv1_valid_o_rescaled)

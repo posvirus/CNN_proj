@@ -20,7 +20,10 @@ module conv_1st_ctrl
            input  wire                         rst_n,
            input  wire                         sta, // start signal
 
-           output reg                          en_bias, // bias buffer enable
+           output reg [9:0]                    data_cnt, // the data counter
+           output reg [8:0]                    init_cnt, // the initial counter
+           output reg                          state, // state machine: 0: init; 1: cycle
+
            output reg                          en_array, // systolic array enable
            output reg                          en_DFF_pixel, // pixel buffer enable
            output reg                          en_DFF_weight, // weight buffer enable
@@ -31,10 +34,6 @@ module conv_1st_ctrl
            output reg [4:0]                    weight_num, // number of weight
            output reg                          valid_o // valid output
        );
-
-reg state; // state machine: 0: init; 1: cycle
-reg [9:0] data_cnt; // the data counter
-reg [8:0] init_cnt; // the initial counter
 
 // Initialize (counter)
 always @(posedge clk or negedge rst_n)
@@ -68,16 +67,6 @@ begin
         data_cnt <= 10'b0;
 end
 
-always @(posedge clk or negedge rst_n) // bias buffer enable
-begin
-    if (!rst_n)
-        en_bias <= 1'b0;
-    else if ((state==1'b0)&&(init_cnt<34))
-        en_bias <= 1'b1;
-    else
-        en_bias <= 1'b0;
-end
-
 always @(posedge clk or negedge rst_n) // systolic array enable
 begin
     if (!rst_n)
@@ -106,7 +95,7 @@ always @(posedge clk or negedge rst_n) // pixel buffer enable
 begin
     if (!rst_n)
         en_DFF_pixel <= 1'b0;
-    else if ((state==1'b0)&&(init_cnt<300)) // initialize
+    else if ((sta)&&(state==1'b0)&&(init_cnt<300)) // initialize
         en_DFF_pixel <= 1'b1;
     else if ((state==1'b1)&&(data_cnt<300)) // cycling
         en_DFF_pixel <= 1'b1;
@@ -118,7 +107,7 @@ always @(posedge clk or negedge rst_n) // weight buffer enable
 begin
     if (!rst_n)
         en_DFF_weight <= 1'b0;
-    else if ((state==1'b0)&&(init_cnt<9)) // initialize
+    else if ((sta)&&(state==1'b0)&&(init_cnt<9)) // initialize
         en_DFF_weight <= 1'b1;
     else if ((state==1'b1)&&((data_cnt%18)<9)) // cycling
         en_DFF_weight <= 1'b1;
@@ -180,7 +169,8 @@ always @(posedge clk or negedge rst_n) // valid output
 begin
     if (!rst_n)
         valid_o <= 1'b0;
-    else if ((state==1'b1)&&((data_cnt%9)==8)) // cycling
+    //else if ((state==1'b1)&&((data_cnt%9)==8)) // cycling
+    else if ((state==1'b1)&&((data_cnt%9)==7)) // cycling
         valid_o <= 1'b1;
     else
         valid_o <= 1'b0;

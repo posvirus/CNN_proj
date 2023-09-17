@@ -204,7 +204,7 @@ always@(posedge clk or negedge rst_n) begin //data_o_rescale_1
 		data1_o <= 0;
 	else if((cnt== 5'd11) && (num_cnt == 6'd32)) begin
 		if (data_big_1[35])
-			data1_o <= (data_big_1[35:22]!=15'b111111111111111)?8'h80:data_big_1[22:15];
+			data1_o <= (data_big_1[35:22]==15'b111111111111111)?8'h80:data_big_1[22:15];
 		else 
 			data1_o <= data_big_1[35:22]?8'h7f:data_big_1[22:15];
 	end
