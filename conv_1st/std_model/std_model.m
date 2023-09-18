@@ -25,7 +25,7 @@ weight_num = 32;
 fig_size = [30 10];
 weight_size = [11 7];
 rescale_param = [14 111];
-check_flag = 1;
+check_flag = 0;
 
 % Import data
 fig_mat = zeros(fig_size(1),fig_size(2),fig_num);

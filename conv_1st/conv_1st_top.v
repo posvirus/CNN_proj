@@ -40,6 +40,7 @@ wire [40*32-1:0] temp_conv_o;
 wire signed [31:0] orig_conv_o [39:0]; // Original convolution output
 wire signed [31:0] bias_conv_o [39:0]; // Bias convolution output
 wire signed [31:0] quan_conv_o [39:0]; // Quantified convolution output
+wire signed [31:0] rescale_o [39:0];   
 
 wire [9:0] data_cnt;
 wire [8:0] init_cnt;
@@ -176,7 +177,8 @@ genvar quan_allo;
 generate
     for (quan_allo=0;quan_allo<40;quan_allo=quan_allo+1)
     begin: QUANTIFY_ALLOCATION
-        assign conv_o[(quan_allo+1)*8-1-:8] = (bias_mem[32]*quan_conv_o[quan_allo])>>(bias_mem[33]);
+		assign rescale_o[quan_allo] = bias_mem[32]*quan_conv_o[quan_allo];
+        assign conv_o[(quan_allo+1)*8-1-:8] = ((rescale_o[quan_allo]>>(bias_mem[33]+7))!=0)? 8'h7f : rescale_o[quan_allo][bias_mem[33]+7-:8];
     end
 endgenerate
 
