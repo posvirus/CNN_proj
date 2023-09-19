@@ -1,3 +1,16 @@
+//////////////////////////////////////////////////////////////////////////////////
+// School: Shanghai Jiao Tong University
+// Author: Shuoqi Fu
+//
+// Create Date: 
+// Module Name: fc_top
+// Project Name: CNN 
+// Description: The full connected layer 
+//
+// Revision:
+//
+//////////////////////////////////////////////////////////////////////////////////
+
 module fc_top(
 	input wire clk,
 	input wire rst_n,
@@ -110,16 +123,6 @@ always @(posedge clk or negedge rst_n) begin
 	else if (valid_i)
 		num_cnt <= num_cnt + 1'b1;
 end
-
-always @(posedge clk or negedge rst_n) begin
-	if (!rst_n)
-		cnt <= 0;
-	else if (cnt == 4'd12)
-		cnt <= 0;
-	else if (valid_i | fc_en)
-		cnt <= cnt + 1'b1;
-end
-
 
 always @(posedge clk or negedge rst_n) begin
 	if (!rst_n)
