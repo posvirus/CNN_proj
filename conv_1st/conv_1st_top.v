@@ -24,7 +24,7 @@ module conv_1st_top
            input  wire [71:0]                  weight_i, // Weight input
 
            output wire [40*8-1:0]              conv_o, // Convolution output
-           output wire                         valid_o
+           output reg                          valid_o
        );
 
 // Aux signal
@@ -38,9 +38,13 @@ wire [4:0] weight_num;
 
 wire [40*32-1:0] temp_conv_o;
 wire signed [31:0] orig_conv_o [39:0]; // Original convolution output
-wire signed [31:0] bias_conv_o [39:0]; // Bias convolution output
-wire signed [31:0] quan_conv_o [39:0]; // Quantified convolution output
-wire signed [31:0] rescale_o [39:0];   
+reg signed [31:0] bias_conv_o [39:0]; // Bias convolution output
+reg signed [31:0] quan_conv_o [39:0]; // Quantified convolution output
+reg signed [31:0] rescale_o [39:0];
+
+wire orig_valid_o;
+reg bias_valid_o, quan_valid_o;
+
 
 wire [9:0] data_cnt;
 wire [8:0] init_cnt;
@@ -87,7 +91,7 @@ conv_1st_ctrl u_conv_1st_ctrl(
                   .ud_weight(ud_weight),
                   .flush(flush),
                   .weight_num(weight_num),
-                  .valid_o(valid_o)
+                  .valid_o(orig_valid_o)
               );
 
 // Scan chain input
@@ -157,7 +161,12 @@ genvar bias_allo;
 generate
     for (bias_allo=0;bias_allo<40;bias_allo=bias_allo+1)
     begin: BIAS_ALLOCATION
-        assign bias_conv_o[bias_allo] = orig_conv_o[bias_allo]+{{16{bias_mem[weight_num][15]}},bias_mem[weight_num]};
+        always @(posedge clk)
+        begin
+            bias_conv_o[bias_allo] <= orig_conv_o[bias_allo]+{{16{bias_mem[weight_num][15]}},bias_mem[weight_num]};
+            bias_valid_o <= orig_valid_o;
+        end
+        // assign bias_conv_o[bias_allo] = orig_conv_o[bias_allo]+{{16{bias_mem[weight_num][15]}},bias_mem[weight_num]};
     end
 endgenerate
 
@@ -167,7 +176,12 @@ genvar act_allo;
 generate
     for (act_allo=0;act_allo<40;act_allo=act_allo+1)
     begin: ACTIVATION_ALLOCATION
-        assign quan_conv_o[act_allo] = (bias_conv_o[act_allo]>0)?(bias_conv_o[act_allo]):0;
+        always @(posedge clk)
+        begin
+            quan_conv_o[act_allo] <= (bias_conv_o[act_allo]>0)?(bias_conv_o[act_allo]):0;
+            quan_valid_o <= bias_valid_o;
+        end
+        // assign quan_conv_o[act_allo] = (bias_conv_o[act_allo]>0)?(bias_conv_o[act_allo]):0;
     end
 endgenerate
 
@@ -177,7 +191,12 @@ genvar quan_allo;
 generate
     for (quan_allo=0;quan_allo<40;quan_allo=quan_allo+1)
     begin: QUANTIFY_ALLOCATION
-		assign rescale_o[quan_allo] = bias_mem[32]*quan_conv_o[quan_allo];
+		// assign rescale_o[quan_allo] = bias_mem[32]*quan_conv_o[quan_allo];
+        always @(posedge clk)
+        begin
+            rescale_o[quan_allo] <= bias_mem[32]*quan_conv_o[quan_allo];
+            valid_o <= quan_valid_o;
+        end
         assign conv_o[(quan_allo+1)*8-1-:8] = ((rescale_o[quan_allo]>>(bias_mem[33]+7))!=0)? 8'h7f : rescale_o[quan_allo][bias_mem[33]+7-:8];
     end
 endgenerate

@@ -141,14 +141,14 @@ always @(negedge clk) // Store the result
 begin
     if (sta)
     begin
-        if ((sta)&&(valid_o)&&(fig_cnt>300))
+        if ((sta)&&(valid_o))
             $fwrite(result,"%80x\n",conv_o);  //Write the conv output
     end
 end
 
 always @(posedge clk) // Stop
 begin
-    if (fig_cnt==300*(CYC_NUM+1)+2)
+    if (fig_cnt==300*(CYC_NUM+1)+5)
     begin
         $fclose(result);
         $display("Simulation done!");
