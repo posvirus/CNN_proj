@@ -18,7 +18,7 @@ module accumulator
            input  wire                         rst_n,
            input  wire                         en,
            input  wire                         flush,
-           input  wire signed [31:0]           data_i, // Data input
+           input  wire signed [15:0]           data_i, // Data input
 
            output reg signed [31:0]            result_o // Accumulator output
        );

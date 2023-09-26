@@ -10,6 +10,8 @@
 // Revision:
 // 2023/9/2:
 // Extend the cycling period
+// 2023/9/26:
+// Delay the en_array, flush and valid_o signal
 // Additional Comments:
 //
 //////////////////////////////////////////////////////////////////////////////////
@@ -24,16 +26,19 @@ module conv_1st_ctrl
            output reg [8:0]                    init_cnt, // the initial counter
            output reg                          state, // state machine: 0: init; 1: cycle
 
-           output reg                          en_array, // systolic array enable
+           output wire                         en_array, // systolic array enable
            output reg                          en_DFF_pixel, // pixel buffer enable
            output reg                          en_DFF_weight, // weight buffer enable
            output reg                          en_cnt, // buffer counter enable
            output reg                          ud_pixel, // pixel buffer enable
            output reg                          ud_weight, // weight buffer enable
-           output reg                          flush, // flush signal
+           output wire                         flush, // flush signal
            output reg [4:0]                    weight_num, // number of weight
-           output reg                          valid_o // valid output
+           output wire                         valid_o // valid output
        );
+
+// Delay signal
+reg delay_en_array, delay_flush, delay_valid_o;
 
 // Initialize (counter)
 always @(posedge clk or negedge rst_n)
@@ -70,13 +75,13 @@ end
 always @(posedge clk or negedge rst_n) // systolic array enable
 begin
     if (!rst_n)
-        en_array <= 1'b0;
+        delay_en_array <= 1'b0;
     else if ((state==1'b0)&&(init_cnt==301))
-        en_array <= 1'b1;
+        delay_en_array <= 1'b1;
     else if ((state==1'b1)&&((data_cnt%9)<6)||((data_cnt%9)==8)) // cycling
-        en_array <= 1'b1;
+        delay_en_array <= 1'b1;
     else
-        en_array <= 1'b0;
+        delay_en_array <= 1'b0;
 end
 
 always @(posedge clk or negedge rst_n) // buffer counter enable
@@ -146,11 +151,11 @@ end
 always @(posedge clk or negedge rst_n) // flush
 begin
     if (!rst_n)
-        flush <= 1'b0;
+        delay_flush <= 1'b0;
     else if ((state==1'b1)&&((data_cnt%9)==8)) // cycling
-        flush <= 1'b1;
+        delay_flush <= 1'b1;
     else
-        flush <= 1'b0;
+        delay_flush <= 1'b0;
 end
 
 always @(posedge clk or negedge rst_n) // weight matrix number
@@ -162,17 +167,45 @@ begin
     else if ((state==1'b1)&&((data_cnt%18)==0)) // cycling
         weight_num <= weight_num+1;
     else
-        weight_num <= weight_num; 
+        weight_num <= weight_num;
 end
 
 always @(posedge clk or negedge rst_n) // valid output
 begin
     if (!rst_n)
-        valid_o <= 1'b0;
-    else if ((state==1'b1)&&((data_cnt%9)==8)) // cycling
-        valid_o <= 1'b1;
+        delay_valid_o <= 1'b0;
+    else if ((state==1'b1)&&((data_cnt%9)==7)) // cycling
+        delay_valid_o <= 1'b1;
     else
-        valid_o <= 1'b0;
+        delay_valid_o <= 1'b0;
 end
+
+// Delay signal
+DFF_1bit u_DFF_1bit_array(
+             .clk(clk),
+             .rst_n(rst_n),
+             .en(1'b1),
+             .d_i(delay_en_array),
+
+             .q_o(en_array)
+         );
+
+DFF_1bit u_DFF_1bit_flush(
+             .clk(clk),
+             .rst_n(rst_n),
+             .en(1'b1),
+             .d_i(delay_flush),
+
+             .q_o(flush)
+         );
+
+DFF_1bit u_DFF_1bit_valid(
+             .clk(clk),
+             .rst_n(rst_n),
+             .en(1'b1),
+             .d_i(delay_valid_o),
+
+             .q_o(valid_o)
+         );
 
 endmodule

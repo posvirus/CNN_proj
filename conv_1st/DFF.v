@@ -12,15 +12,37 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 
-module DFF_8bit
+module DFF_1bit
        (
            input  wire                  clk,
            input  wire                  rst_n,
            input  wire                  en,
-           input  wire [7:0]            d_i,
+           input  wire                  d_i,
 
-           output reg  [7:0]            q_o
+           output reg                   q_o
        );
+
+always @(posedge clk or negedge rst_n)
+begin
+    if (!rst_n)
+        q_o <= 1'b0;
+    else if (en)
+        q_o <= d_i;
+    else
+        q_o <= q_o;
+end
+
+endmodule
+
+    module DFF_8bit
+    (
+        input  wire                  clk,
+        input  wire                  rst_n,
+        input  wire                  en,
+        input  wire [7:0]            d_i,
+
+        output reg  [7:0]            q_o
+    );
 
 always @(posedge clk or negedge rst_n)
 begin
