@@ -48,10 +48,11 @@ reg signed [BIAS_W-1:0]              pwconv_bias_reg;
 wire signed [OUTPUT_NUM*(DATA_W+FILTER_W+6)-1:0] data_o_temp;
 wire                                             valid_o_temp;
 
-
 always @(posedge clk or negedge rst_n) begin
 	if(!rst_n)
 		cnt <= 5'd0;
+	else if (pwconv_valid_i & cnt == 5'd18)
+		cnt <= 5'd1;
 	else if (weight_num == 6'd33)
 	    cnt <= 5'd0;
 	else if (pwconv_valid_i | cnt == 5'd18)
@@ -106,6 +107,8 @@ end
 
 always @(posedge clk or negedge rst_n) begin
 	if (!rst_n) 
+	  weight_num <= 6'b0;
+	else if (pwconv_valid_i & cnt == 5'd18)
 	  weight_num <= 6'b0;
 	else if (cnt == 5'd1) begin   //?
 	  if (weight_num == 6'd33) 
