@@ -13,9 +13,11 @@ module cnn(
 	output wire [7:0] data2_o,
 
 	//test
-    input wire [11:0] res_sel_1,  //scan_chain_i
-	input wire [10:0] res_sel_2,  //scan_chain_i
-	input wire [10:0] res_sel_3,  //scan_chain_i
+    input wire [5:0] res_sel_1,  //0-39, 40
+    input wire [5:0] res_sel_1_num,  //0-63, 64
+	input wire [10:0] res_sel_2,  //0-1151, 1152
+	input wire [5:0] res_sel_3,   //0-35, 36
+ 	input wire [4:0] res_sel_3_num, //0-31,32
 
 	output wire [7:0] conv1_res_test,  //scan_chain_o
 	output wire [7:0] conv2_res_test,  //scan_chain_o
@@ -37,27 +39,43 @@ wire maxpool_valid_o;
 wire [9*8-1 :0] maxpool_output;
 
 
-//
+//sram
+wire [72-1:0] data_r;
+wire [9:0] addr;
+wire we;
+wire me;
+
 wire [8*9-1:0] weight_1;
 wire [8*9-1:0] weight_2;
 wire [8*32-1:0] weight_3;
 wire [8*9-1:0] weight_fc1;
 wire [8*9-1:0] weight_fc2;
-//wire [16-1:0] bias_1;
 wire [16-1:0] bias_2;
 wire [16-1:0] bias_3;
 wire [32-1:0] bias_fc;
 
 
+sadslspkb1p576x72m4b1w0cp0d0t0 u_sram(
+    .Q(data_r), 
+	.ADR(addr), 
+	.D(data_w),  //data_w
+	.WE(we), 
+	.ME(me), 
+	.CLK(clk) 
+	//.TEST1, RME, RM
+);
+
 //test
-/*
 test_top u_test_top(
 	.clk(clk),
 	.rst_n(rst_n),
 	
-    .res_sel_1(res_sel_1),    //scan_in
-	.res_sel_2(res_sel_2),    //scan_in
-	.res_sel_3(res_sel_3),    //scan_in
+    .res_sel_1(res_sel_1),  
+	.res_sel_1_num(res_sel_1_num),	
+	.res_sel_2(res_sel_2),  
+	.res_sel_3(res_sel_3),
+	.res_sel_3_num(res_sel_3_num),  
+	
 	.conv1_valid_o_rescaled(conv1_valid_o_rescaled),
 	.conv2_valid_o_rescaled(conv2_valid_o_rescaled),
 	.conv3_valid_o_rescaled(conv3_valid_o_rescaled),
@@ -71,7 +89,7 @@ test_top u_test_top(
 	.valid_o(valid_o),
 	.circ_inter(circ_inter)	
 );
-*/
+
 
 //sram
 sram_top u_sram_top(
@@ -85,16 +103,19 @@ sram_top u_sram_top(
 	.conv2_valid_i(conv1_valid_o_rescaled),
 	.conv3_valid_i(conv2_valid_o_rescaled),
 	.fc_valid_i(maxpool_valid_o),
+	.data_r(data_r),
+	
 	.weight_1(weight_1),
 	.weight_2(weight_2),
 	.weight_3(weight_3),
 	.weight_fc1(weight_fc1),
 	.weight_fc2(weight_fc2),
-	
-	//.bias_1(bias_1),
 	.bias_2(bias_2),
 	.bias_3(bias_3),
-	.bias_fc(bias_fc)	
+	.bias_fc(bias_fc),
+	.addr(addr),
+	.me(me),
+	.we(we)
 );
 
 
