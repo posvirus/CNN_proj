@@ -16,9 +16,11 @@ module test_top(
 	input rst_n,
 	
     //res_test
-    input wire [11:0] res_sel_1,  //0-2559, 2560
-	input wire [10:0] res_sel_2,  //0-1151, 1152
-	input wire [10:0] res_sel_3,   //0-1151, 1152
+    input wire [5:0] res_sel_1,      //0-39, 40
+    input wire [5:0] res_sel_1_num,  //0-63, 64
+	input wire [10:0] res_sel_2,     //0-1151, 1152
+	input wire [5:0] res_sel_3,      //0-35, 36
+ 	input wire [4:0] res_sel_3_num,  //0-31,32
 	input wire conv1_valid_o_rescaled,
 	input wire conv2_valid_o_rescaled,
 	input wire conv3_valid_o_rescaled,
@@ -47,8 +49,10 @@ res_test u_res_test(
 	.rst_n(rst_n),
 	
     .res_sel_1(res_sel_1),  
+	.res_sel_1_num(res_sel_1_num),	
 	.res_sel_2(res_sel_2),  
-	.res_sel_3(res_sel_3),  
+	.res_sel_3(res_sel_3),
+	.res_sel_3_num(res_sel_3_num),  
 	.conv1_valid_o_rescaled(conv1_valid_o_rescaled),
 	.conv2_valid_o_rescaled(conv2_valid_o_rescaled),
 	.conv3_valid_o_rescaled(conv3_valid_o_rescaled),
