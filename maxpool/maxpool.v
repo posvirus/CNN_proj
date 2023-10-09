@@ -1,3 +1,16 @@
+//////////////////////////////////////////////////////////////////////////////////
+// School: Shanghai Jiao Tong University
+// Author: Shuoqi Fu
+//
+// Create Date: 
+// Module Name: maxpool
+// Project Name: CNN 
+// Description: The maxpool layer 
+//
+// Revision:
+//
+//////////////////////////////////////////////////////////////////////////////////
+
 module maxpool(
   input wire  clk,
   input wire  rst_n,
@@ -20,8 +33,6 @@ reg [7:0] data3;
 reg [7:0] data4;
 reg [7:0] data5;
 reg [7:0] data6;
-
-reg [9*8-1 :0] maxpool_inst; 
 
 wire [7:0] input_div [36-1:0];
 genvar input_allo;
@@ -97,38 +108,30 @@ always @(posedge clk or negedge rst_n) begin
 		data6 <= 0;
 	else if (maxpool_en) begin
 		if (data3 < data4)
-			data6 <= data3;
-		else
 			data6 <= data4;
+		else
+			data6 <= data3;
 	end
 end
 
 //cmp2
 always @(posedge clk or negedge rst_n) begin
 	if (!rst_n)
-		maxpool_inst <= 0;
+		maxpool_output <= 0;
 	else if ((cnt>=5'd2) && (cnt<=5'd10)) begin
 		if (data5 < data6)
-			maxpool_inst[(cnt-1)*8 -1-:8] <= data6;
-		else if (data5 > data6)
-			maxpool_inst[(cnt-1)*8 -1-:8] <= data5;
+			maxpool_output[(cnt-1)*8 -1-:8] <= data6;
+		else 
+			maxpool_output[(cnt-1)*8 -1-:8] <= data5;
 	end
 end
-
-always @(posedge clk or negedge rst_n) begin
-	if (!rst_n)
-		maxpool_output <= 0;
-	else if (cnt == 5'd16)
-		maxpool_output <= maxpool_inst;
-end
-
 
 always @(posedge clk or negedge rst_n) begin
 	if (!rst_n)
 		maxpool_valid_o <= 1'b0;
 	else if (maxpool_valid_o)
 		maxpool_valid_o <= 1'b0;
-	else if (cnt == 5'd16)
+	else if (cnt == 5'd12)
 		maxpool_valid_o <= 1'b1;
 end
  
