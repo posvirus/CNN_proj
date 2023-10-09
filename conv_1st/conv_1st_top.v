@@ -156,6 +156,7 @@ generate
     end
 endgenerate
 
+
 genvar bias_allo;
 
 generate
@@ -164,11 +165,14 @@ generate
         always @(posedge clk)
         begin
             bias_conv_o[bias_allo] <= orig_conv_o[bias_allo]+{{16{bias_mem[weight_num][15]}},bias_mem[weight_num]};
-            bias_valid_o <= orig_valid_o;
         end
         // assign bias_conv_o[bias_allo] = orig_conv_o[bias_allo]+{{16{bias_mem[weight_num][15]}},bias_mem[weight_num]};
     end
 endgenerate
+
+always @(posedge clk) begin
+    bias_valid_o <= orig_valid_o;
+end
 
 // Activation
 genvar act_allo;
@@ -179,11 +183,15 @@ generate
         always @(posedge clk)
         begin
             quan_conv_o[act_allo] <= (bias_conv_o[act_allo]>0)?(bias_conv_o[act_allo]):0;
-            quan_valid_o <= bias_valid_o;
         end
         // assign quan_conv_o[act_allo] = (bias_conv_o[act_allo]>0)?(bias_conv_o[act_allo]):0;
     end
 endgenerate
+
+always @(posedge clk) begin
+    quan_valid_o <= bias_valid_o;
+end 
+
 
 // Quantify
 genvar quan_allo;
@@ -195,10 +203,13 @@ generate
         always @(posedge clk)
         begin
             rescale_o[quan_allo] <= bias_mem[32]*quan_conv_o[quan_allo];
-            valid_o <= quan_valid_o;
         end
         assign conv_o[(quan_allo+1)*8-1-:8] = ((rescale_o[quan_allo]>>(bias_mem[33]+7))!=0)? 8'h7f : rescale_o[quan_allo][bias_mem[33]+7-:8];
     end
 endgenerate
+
+always @(posedge clk) begin
+    valid_o <= quan_valid_o;
+end 
 
 endmodule
