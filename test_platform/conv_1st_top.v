@@ -95,24 +95,12 @@ conv_1st_ctrl u_conv_1st_ctrl(
               );
 
 // Scan chain input
-assign scan_ptr = scan_i[6:0];
+assign scan_ptr = scan_i[6:0]; // Only the low 7 bits are available
 
-genvar scan_allo;
-
-generate
-    for (scan_allo=0;scan_allo<100;scan_allo=scan_allo+1)
-    begin: SCAN_ALLOCATION
-        always @(posedge clk or negedge rst_n)
-        begin
-            if (!rst_n)
-                scan_mem[scan_allo] <= 32'b0;
-            else if (scan_allo==scan_ptr)
-                scan_mem[scan_allo] <= scan_i[39:8];
-            else
-                scan_mem[scan_allo] <= scan_mem[scan_allo]; 
-        end
-    end
-endgenerate
+always @(posedge clk)
+begin
+    scan_mem[scan_ptr] <= scan_i[39:8];
+end
 
 always @(posedge clk or negedge rst_n) // Pixel counter
 begin
@@ -137,24 +125,12 @@ generate
 endgenerate
 
 // Bias
-assign bias_ptr = bias_i[5:0];
+assign bias_ptr = bias_i[5:0]; // Only the low 6 bits are available
 
-genvar bias_buf;
-
-generate
-    for (bias_buf=0;bias_buf<34;bias_buf=bias_buf+1) // Bias buffer
-    begin: BIAS_BUFFER
-        always @(posedge clk or negedge rst_n)
-        begin
-            if (!rst_n)
-                bias_mem[bias_buf] <= 16'b0;
-            else if (bias_buf==bias_ptr)
-                bias_mem[bias_buf] <= bias_i[23:8];
-            else
-                bias_mem[bias_buf] <= bias_mem[bias_buf];
-        end
-    end
-endgenerate
+always @(posedge clk)
+begin
+    bias_mem[bias_ptr] <= bias_i[23:8];
+end
 
 
 genvar bias_allo;
@@ -171,7 +147,8 @@ generate
     end
 endgenerate
 
-always @(posedge clk) begin
+always @(posedge clk)
+begin
     bias_valid_o <= orig_valid_o;
 end
 
@@ -190,9 +167,10 @@ generate
     end
 endgenerate
 
-always @(posedge clk) begin
+always @(posedge clk)
+begin
     quan_valid_o <= bias_valid_o;
-end 
+end
 
 
 // Quantify
@@ -201,7 +179,7 @@ genvar quan_allo;
 generate
     for (quan_allo=0;quan_allo<40;quan_allo=quan_allo+1)
     begin: QUANTIFY_ALLOCATION
-		// assign rescale_o[quan_allo] = bias_mem[32]*quan_conv_o[quan_allo];
+        // assign rescale_o[quan_allo] = bias_mem[32]*quan_conv_o[quan_allo];
         always @(posedge clk)
         begin
             rescale_o[quan_allo] <= bias_mem[32]*quan_conv_o[quan_allo];
@@ -211,8 +189,9 @@ generate
     end
 endgenerate
 
-always @(posedge clk) begin
+always @(posedge clk)
+begin
     valid_o <= quan_valid_o;
-end 
+end
 
 endmodule

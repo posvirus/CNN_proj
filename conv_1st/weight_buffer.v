@@ -27,7 +27,7 @@ module weight_buffer
        );
 
 // Aux signal
-reg  [7:0] weight_o [10:0];
+wire  [7:0] weight_o [10:0];
 wire [71:0] flip_conn [9:0]; // Interconnection of the DFF
 reg  [7:0] cur_weight [10:0][6:0]; // Memory for storing the current weight
 reg  [2:0] cnt; // Counter
