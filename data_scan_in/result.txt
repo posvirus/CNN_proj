@@ -1,7 +1,0 @@
-raw result: 01111000000000011111000000000000000000001111100000
-conv1_res_test: 224
-conv2_res_test:   3
-conv3_res_test:   0
-data1_o: 192
-data2_o:   7
-circ_inter:   480
