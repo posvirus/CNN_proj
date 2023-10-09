@@ -1,3 +1,16 @@
+//////////////////////////////////////////////////////////////////////////////////
+// School: Shanghai Jiao Tong University
+// Author: Shuoqi Fu
+//
+// Create Date: 
+// Module Name: pe_fc
+// Project Name: CNN 
+// Description: The pe of full connected layer
+//
+// Revision:
+//
+//////////////////////////////////////////////////////////////////////////////////
+
 module pe_fc(
 		input clk,
 		input rst_n,
@@ -12,7 +25,7 @@ module pe_fc(
 );
 
 reg signed [15:0] mul;
-reg signed [15:0] add;
+reg signed [15:0] add;   //combination logic
 
 always @(posedge clk or negedge rst_n) begin
 	if (!rst_n)

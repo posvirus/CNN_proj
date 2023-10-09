@@ -1,3 +1,16 @@
+//////////////////////////////////////////////////////////////////////////////////
+// School: Shanghai Jiao Tong University
+// Author: Shuoqi Fu
+//
+// Create Date: 
+// Module Name: fc_top
+// Project Name: CNN 
+// Description: The full connected layer 
+//
+// Revision:
+//
+//////////////////////////////////////////////////////////////////////////////////
+
 module fc_top(
 	input wire clk,
 	input wire rst_n,
@@ -39,7 +52,7 @@ reg signed [7:0] pe_weight1;
 reg signed [7:0] pe_weight2;
 
 wire signed [31:0] data_o_1,data_o_2;
-wire signed [35:0] data_big_1, data_big_2;
+reg signed [35:0] data_big_1, data_big_2;
 
 //---------------- data_prepare ------------------//
 genvar input_allo;
@@ -110,16 +123,6 @@ always @(posedge clk or negedge rst_n) begin
 	else if (valid_i)
 		num_cnt <= num_cnt + 1'b1;
 end
-
-always @(posedge clk or negedge rst_n) begin
-	if (!rst_n)
-		cnt <= 0;
-	else if (cnt == 4'd12)
-		cnt <= 0;
-	else if (valid_i | fc_en)
-		cnt <= cnt + 1'b1;
-end
-
 
 always @(posedge clk or negedge rst_n) begin
 	if (!rst_n)
@@ -196,15 +199,30 @@ pe_fc u_pe_fc2(
 	.data_o(data_o_2)
 );
 
-assign data_big_1 = data_o_1 * M0;
-assign data_big_2 = data_o_2 * M0; 
+always @(posedge clk or negedge rst_n) begin
+	if (!rst_n)
+		data_big_1 <= 0;
+	else
+		data_big_1 <= data_o_1 * M0;
+end
+
+always @(posedge clk or negedge rst_n) begin
+	if (!rst_n)
+		data_big_2 <= 0;
+	else
+		data_big_2 <= data_o_2 * M0;
+end
+
+//assign data_big_1 = data_o_1 * M0;
+//assign data_big_2 = data_o_2 * M0; 
 
 always@(posedge clk or negedge rst_n) begin //data_o_rescale_1
 	if(!rst_n)
 		data1_o <= 0;
-	else if((cnt== 5'd11) && (num_cnt == 6'd32)) begin
+	//else if((cnt== 5'd11) && (num_cnt == 6'd32)) begin
+	else if((cnt== 5'd12) && (num_cnt == 6'd32)) begin
 		if (data_big_1[35])
-			data1_o <= (data_big_1[35:22]!=15'b111111111111111)?8'h80:data_big_1[22:15];
+			data1_o <= (data_big_1[35:22]==15'b111111111111111)?8'h80:data_big_1[22:15];
 		else 
 			data1_o <= data_big_1[35:22]?8'h7f:data_big_1[22:15];
 	end
@@ -213,7 +231,8 @@ end
 always@(posedge clk or negedge rst_n) begin //data_o_rescale_1
 	if(!rst_n)
 		data2_o <= 0;
-	else if((cnt== 5'd11) && (num_cnt == 6'd32)) begin
+	//else if((cnt== 5'd11) && (num_cnt == 6'd32)) begin
+	else if((cnt== 5'd12) && (num_cnt == 6'd32)) begin
 		if (data_big_2[35])
 			data2_o <= (data_big_2[35:22]!=15'b111111111111111)?8'h80:data_big_2[22:15];
 		else 
@@ -224,8 +243,12 @@ end
 always@(posedge clk or negedge rst_n) begin
 	if(!rst_n)
 		valid_o <= 1'b0;
+	else if (valid_o)
+		valid_o <= 1'b0;
 	else if ((cnt== 5'd11) && (num_cnt == 6'd32))
 		valid_o <= 1'b1;
 end
+
+
 
 endmodule 
